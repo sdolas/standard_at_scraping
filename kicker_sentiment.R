@@ -1,5 +1,6 @@
 librarian::shelf("RSQLite", "ggplot2", "tidyr", "purrr", "dplyr", "lubridate", "tidytext")
 
+Sys.setlocale(category = "LC_TIME", locale = "German")
 if (!require("devtools")) install.packages("devtools")
 devtools::install_github("sebastiansauer/pradadata")
 data(sentiws)

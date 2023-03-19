@@ -1,5 +1,6 @@
 librarian::shelf("RSQLite", "ggplot2", "tidyr", "purrr", "dplyr", "lubridate", "tidytext", "stringr", "tidyquant", "patchwork")
 
+Sys.setlocale(category = "LC_TIME", locale = "German")
 setwd("C:\\Users\\user00\\Documents\\GitHub\\standard_at_scraping")
 load("sentiws.RData")
 
@@ -51,16 +52,16 @@ pltdata <- df |>
   summarise(n = sum(n()), 
             percentage = n / sum(n), 
             sum_sentiment = sum(SentAna),
-            kurs=close) |>
+            atx=close) |>
   ungroup() |> 
-  mutate(sentiment = ifelse(sum_sentiment > max(c(quantile(sum_sentiment, 0.95), 1)), "positive", 
-                            ifelse(sum_sentiment < min(c(quantile(sum_sentiment, 0.05),-1)), "negative", "neutral")))
+  mutate(sentiment = ifelse(sum_sentiment > max(c(quantile(sum_sentiment, 0.95), 1)), "positiv", 
+                            ifelse(sum_sentiment < min(c(quantile(sum_sentiment, 0.05),-1)), "negativ", "neutral")))
 
 
 # plotte
 pltdata <- na.omit(pltdata)
 # Plot 1 erstellen
-p1 <- ggplot(pltdata, aes(x = pubdate, y=kurs)) + 
+p1 <- ggplot(pltdata, aes(x = pubdate, y=atx)) + 
   geom_line(aes()) +
   theme_classic()+
   theme(axis.text.x = element_text(angle = 60, hjust = 1))+
@@ -71,7 +72,7 @@ p2 <- ggplot(pltdata, aes(x = pubdate, y = new_kicker, group=sentiment, fill=sen
   geom_tile()+
   theme_classic()+
   scale_x_date(date_breaks = "3 month", date_labels = "%b-%Y")+
-  scale_fill_manual(values = c("positive" = "green", "negative" = "red", "neutral" = "lightgrey"))+
+  scale_fill_manual(values = c("positiv" = "green", "negativ" = "red", "neutral" = "lightgrey"))+
   theme(axis.text.x = element_text(angle = 60, hjust = 1))+
   labs(x = "Datum", y = "Kategorie")
 

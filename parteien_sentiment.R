@@ -1,5 +1,6 @@
 librarian::shelf("RSQLite", "ggplot2", "tidyr", "purrr", "dplyr", "lubridate", "tidytext", "stringr")
 
+Sys.setlocale(category = "LC_TIME", locale = "German")
 setwd("C:\\Users\\user00\\Documents\\GitHub\\standard_at_scraping")
 load("sentiws.RData")
 

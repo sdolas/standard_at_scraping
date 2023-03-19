@@ -1,21 +1,14 @@
 librarian::shelf("RSQLite", "ggplot2", "tidyr", "purrr", "dplyr", "lubridate")
 
-# speichere pfad zur Datenbank
-db <- "C:\\Users\\user00\\Documents\\GitHub\\standard_at_scraping\\article_data.db"
+Sys.setlocale(category = "LC_TIME", locale = "German")
 
-## Verbinde mit der Datenbank
-con <- dbConnect(drv=RSQLite::SQLite(), dbname=db)
-
-## speichere alle Tabellen der Datenbank
-tables <- dbListTables(con)
-
-## entferne sqlite_sequence (beinhaltet tabelleninformation)
-tables <- tables[tables != "sqlite_sequence"]
-
-# lade daten
+# lade Daten
+db <- "C:\\Users\\user00\\Documents\\GitHub\\standard_at_scraping\\article_data.db" # speichere pfad zur Datenbank
+con <- dbConnect(drv=RSQLite::SQLite(), dbname=db) # Verbinde mit der Datenbank
+tables <- dbListTables(con) # speichere alle Tabellen der Datenbank
+tables <- tables[tables != "sqlite_sequence"] # entferne sqlite_sequence (beinhaltet tabelleninformation)
 data <- dbGetQuery(conn=con, statement=paste0("SELECT * FROM '", tables[[1]], "'"))
 data$pubdate <- as.Date(data$pubdate)
-
 df <- data
 
 # erhalte die 5 größten kicker
