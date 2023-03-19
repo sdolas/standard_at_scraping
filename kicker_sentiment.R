@@ -43,11 +43,9 @@ suppressMessages(
     mutate(SentAna = purrr::map_chr(body, sentiment_analysis))
 )
 
-# erhalte die größten kicker
+# reduziere die kicker auf n kicker + "sonstiges"
 tmp <- filtered_df |> group_by(kicker) |> summarise(n = n())
 topkicker <- tmp[order(tmp$n, decreasing = T),] |> head(10)
-
-# reduziere die kicker auf n kicker + "sonstiges"
 filtered_df$new_kicker <- ifelse(filtered_df$kicker %in% topkicker$kicker, filtered_df$kicker, "sonstiges")
 
 # plotdata erstellen
