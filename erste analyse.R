@@ -33,8 +33,7 @@ g + geom_area() +
 
 
 g <- ggplot(df_1, aes(x=week, y=n, group=new_kicker, fill=new_kicker,colour=new_kicker))
-g + geom_line() + 
-  scale_x_date(date_breaks = "3 month", date_labels = "%b-%Y")
+g + geom_line() + scale_x_date(date_breaks = "3 month", date_labels = "%b-%Y")
 
 ##########
 tmp <- data |> group_by(origins) |> summarise(n = n())

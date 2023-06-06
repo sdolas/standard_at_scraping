@@ -14,13 +14,13 @@ data$pubdate <- as.Date(data$pubdate)
 df <- data
 
 # erstelle dummy-variablen 
-df$boerse = 0
-df$boerse[str_detect(df$body, "\\bBörse\\b|Aktien\\b|Anleihen\\b|Kapitalmarkt\\b|ATX\\b|Rezession")] <- 1
+df$oenb = 0
+df$oenb[str_detect(df$body, "\\bOeNB\\b|Österreichische Nationalbank")] <- 1
+df$oenb[str_detect(df$title, "\\bOeNB\\b|Österreichische Nationalbank")] <- 1
+df$oenb[str_detect(df$subtitle, "\\bOeNB\\b|Österreichische Nationalbank")] <- 1
+filtered_df <- df[df$oenb==1,]
 
-# filtere nur artikel, wo genau eine Partei vorkommt
-filtered_df <- df  |> filter(boerse == 1)
-
-## SENTIMENT ANALYSE
+# SENTIMENT ANALYSE
 # Funktion, die die Sentiment-Analyse für jeden Artikel durchführt
 sentiment_analysis <- function(article_text) {
   data.frame(body=article_text)  |> 
@@ -36,50 +36,28 @@ suppressMessages(
     mutate(SentAna = purrr::map_chr(body, sentiment_analysis))
 )
 
-# füge Börsenkurse hinzu
-atx <- tq_get("^ATX", get = "stock.prices", from = " 1999-01-01")
-filtered_df <- inner_join(filtered_df, atx, by=c("pubdate"="date"))
-
-# reduziere die kicker auf n kicker + "sonstiges"
-tmp <- filtered_df |> group_by(kicker) |> summarise(n = n())
+# reduziere die autoren auf n kicker + "sonstiges"
+tmp <- filtered_df |> group_by(origins) |> summarise(n = n())
 topkicker <- tmp[order(tmp$n, decreasing = T),] |> head(5)
-filtered_df$new_kicker <- ifelse(filtered_df$kicker %in% topkicker$kicker, 
-                                 filtered_df$kicker, "sonstiges")
+filtered_df$new_kicker <- ifelse(filtered_df$origins %in% topkicker$origins, filtered_df$origins, "sonstiges")
 
-# gruppiere
-filtered_df$SentAna <- filtered_df$SentAna |> as.numeric()
+# plotdata erstellen
+filtered_df$SentAna<-filtered_df$SentAna |> as.numeric()
 pltdata <- filtered_df |>
+  filter(new_kicker != "sonstiges") |>
   group_by(pubdate, new_kicker) |>
   summarise(n = sum(n()), 
             percentage = n / sum(n), 
-            sum_sentiment = sum(SentAna),
-            atx=close) |>
+            sum_sentiment = sum(SentAna)) |>
   ungroup() |> 
   mutate(sentiment = ifelse(sum_sentiment > max(c(quantile(sum_sentiment, 0.95), 0)), "positiv", 
                             ifelse(sum_sentiment < min(c(quantile(sum_sentiment, 0.05),0)), "negativ", "neutral")))
 
 
-# plotte
-pltdata <- na.omit(pltdata)
-# Plot 1 erstellen
-p1 <- ggplot(pltdata, aes(x = pubdate, y=atx)) + 
-  geom_line(aes()) +
-  theme_classic()+
-  theme(axis.text.x = element_text(angle = 60, hjust = 1))+
-  labs(title = "ATX-Kurse und Artikel mit Börsenbezug", x = "", y = "ATX-Index")
-
-# Plot 2 erstellen
-p2 <- ggplot(pltdata, aes(x = pubdate, y = new_kicker, group=sentiment, fill=sentiment)) + 
-  geom_tile()+
-  theme_classic()+
+# PLOT
+g <- ggplot(pltdata, aes(x=pubdate, y=new_kicker, group=sentiment, fill=sentiment))
+g + geom_tile(width=1)+ 
   scale_x_date(date_breaks = "3 month", date_labels = "%b-%Y")+
-  scale_fill_manual(values = c("positiv" = "green", "negativ" = "red", "neutral" = "lightgrey"))+
+  theme_classic()+
   theme(axis.text.x = element_text(angle = 60, hjust = 1))+
-  labs(x = "Datum", y = "Kategorie")
-
-# Plots kombinieren und ausrichten
-(p1 + theme(axis.title.x=element_blank(), axis.text.x=element_blank(), axis.ticks.x=element_blank())) /
-  p2 + plot_layout(guides = "auto") + 
-  theme(axis.title.x=element_text(size=14, face="bold"), axis.text.x=element_text(size=12)) + 
-  plot_annotation(tag_levels = NULL)
-
+  scale_fill_manual(values = c("positiv" = "green", "negativ" = "red", "neutral" = "grey"))
